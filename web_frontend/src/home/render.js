@@ -18,6 +18,8 @@ function render(state) {
     page = networkPage(state)
   } else if (state.route == 'inbox') {
     page = inboxPage(state)
+  } else if (state.route == 'search') {
+    page = streamPage(state)
   } else if (state.route.indexOf('profile/') === 0) {
     var profid = state.route.slice(8)
     page = profilePage(state, profid)
@@ -47,6 +49,7 @@ function header(events, uId, isSyncing) {
       h('ul.nav.navbar-nav', [
         h('li', a('#/inbox', 'inbox')),
         h('li', a('#/profile/' + uId, 'profile')),
+        h('li', a('#/search', 'search')),
         h('li', a('#/network', 'network')),
         h('li', a('#/help', 'help'))
       ]),
@@ -176,6 +179,24 @@ function profileControls(events, profile, isYou, followsYou) {
       h('p', h('small', [h('strong', 'User\'s Contact ID: '), profile.idStr]))
     ])
   ])
+}
+
+// Search Page
+
+function streamPage(state) {
+  return h('.stream-page.row', comren.columns({
+    main: [
+      mercury.partial(mainStream, state.feedView, state.events, state.user, state.nicknameMap)
+    ],
+  }, [['main', 12]]));
+}
+
+function mainStream(streamView, events, user, nicknameMap) {
+  var msgs = streamView.messages.filter(function(msg) {
+    if (msg.content.repliesTo) return false
+    return msg.content.postType == 'text' || msg.content.postType == 'gui'
+  })
+  return comren.feed(msgs, streamView, events, user, nicknameMap, false, true)
 }
 
 // Message Page
